@@ -7,6 +7,19 @@ Attribute VB_Name = "Module7"
 
 Option Explicit
 
+Sub UnhideAllITCMASTER()
+ThisWorkbook.Sheets("01.3-ITC MASTER WBS").Activate
+On Error Resume Next
+ActiveSheet.ShowAllData
+On Error GoTo 0
+Sheets("01.3-ITC MASTER WBS").Rows("1:5000").Hidden = False
+Sheets("01.3-ITC MASTER WBS").Columns("A:ZZ").Hidden = False
+Sheets("01.3-ITC MASTER WBS").Columns("F:G").Hidden = True
+Application.DisplayFullScreen = False
+Range("D9").Select
+Application.GoTo Reference:=Range("D9"), Scroll:=True
+End Sub
+
 
 Sub UndoWBS()
 ThisWorkbook.Sheets("01.2-WBS & PIC").Activate
@@ -233,7 +246,7 @@ Sub QTYDurMhrs()
         .Rows("7:54").Hidden = False
         .Rows("694:701").Hidden = False
         
-        ' A:H ? devient A:J après insertion de 2 colonnes
+        ' A:H ? devient A:J aprÃ¨s insertion de 2 colonnes
         .Columns("A:J").Hidden = False
     End With
     
@@ -380,7 +393,7 @@ Sub MacroARenommer()
         On Error GoTo 0
         Application.DisplayFullScreen = True
         
-        ' Réinitialiser
+        ' RÃ©initialiser
         .Columns("A:DZ").Hidden = False
         .Rows("1:1000").Hidden = False
         
@@ -397,7 +410,7 @@ Sub MacroARenommer()
 
     Range("A1").Select
     Application.GoTo Reference:=Range("A1"), Scroll:=True
-    Range("I9").Select   ' F9 ? I9 (décalage +2 après E)
+    Range("I9").Select   ' F9 ? I9 (dÃ©calage +2 aprÃ¨s E)
     ActiveWindow.Zoom = 50
     Application.ScreenUpdating = True
 
@@ -630,7 +643,7 @@ Sub BilanEnergieEncore()
     wsTemp.Rows.AutoFit
 
     Application.ScreenUpdating = True
-    MsgBox "Vue temporaire créée avec succès dans l'ordre demandé.", vbInformation
+    MsgBox "Vue temporaire crÃ©Ã©e avec succÃ¨s dans l'ordre demandÃ©.", vbInformation
 End Sub
 
 Sub SelectionMarchesTravaux()
@@ -767,6 +780,7 @@ Sub PPBOOS()
     Range("L165").Select
     Application.ScreenUpdating = True
 End Sub
+
 
 
 
