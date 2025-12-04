@@ -1,11 +1,11 @@
 Attribute VB_Name = "Module1"
 '==============================================================================
-' DÉCLARATIONS GLOBALES - À PLACER EN HAUT DU MODULE
+' DÃ‰CLARATIONS GLOBALES - Ã€ PLACER EN HAUT DU MODULE
 '==============================================================================
-' Variable globale pour mémoriser la langue de Word
+' Variable globale pour mÃ©moriser la langue de Word
 Public g_WordLanguage As String
 
-' Type personnalisé pour l'analyse des lignes Annexe 3b
+' Type personnalisÃ© pour l'analyse des lignes Annexe 3b
 Public Type LigneInfo
     EstVide As Boolean
     EstTitre As Boolean
@@ -17,7 +17,7 @@ End Type
 
 '==============================================================================
 ' MACRO PRINCIPALE : GENERER_LIVRABLE
-' Description: Génère automatiquement des livrables Word/Excel selon paramètres
+' Description: GÃ©nÃ¨re automatiquement des livrables Word/Excel selon paramÃ¨tres
 '==============================================================================
 Public Sub Generer_Livrable()
     Dim startTime As Double
@@ -33,14 +33,14 @@ Public Sub Generer_Livrable()
     
     On Error GoTo ErrHandler
     
-    ' Réinitialiser la détection de langue Word
+    ' RÃ©initialiser la dÃ©tection de langue Word
     g_WordLanguage = ""
     
-    '--- DÉBUT CHRONOMÈTRE ---
+    '--- DÃ‰BUT CHRONOMÃˆTRE ---
     startTime = Timer
     
-    '--- LECTURE DES PARAMÈTRES ---
-    Debug.Print "=== DÉBUT GÉNÉRATION LIVRABLE ==="
+    '--- LECTURE DES PARAMÃˆTRES ---
+    Debug.Print "=== DÃ‰BUT GÃ‰NÃ‰RATION LIVRABLE ==="
     Debug.Print "Date/Heure: " & Now
     
     Set wsMaster = ThisWorkbook.Sheets("Master Guide")
@@ -53,21 +53,21 @@ Public Sub Generer_Livrable()
     
     Debug.Print "Livrable choisi: " & nomLivrable
     Debug.Print "Langue: " & langue
-    Debug.Print "Annexes à générer: " & IIf(annexe1, "1 ", "") & IIf(annexe2, "2 ", "") & _
+    Debug.Print "Annexes Ã  gÃ©nÃ©rer: " & IIf(annexe1, "1 ", "") & IIf(annexe2, "2 ", "") & _
                 IIf(annexe3, "3 ", "") & IIf(annexe4, "4", "")
     
-    '--- VALIDATION DES PARAMÈTRES ---
+    '--- VALIDATION DES PARAMÃˆTRES ---
     If nomLivrable = "" Then
-        MsgBox "Erreur: Aucun livrable sélectionné en cellule N7", vbCritical, "Erreur Paramètres"
+        MsgBox "Erreur: Aucun livrable sÃ©lectionnÃ© en cellule N7", vbCritical, "Erreur ParamÃ¨tres"
         Exit Sub
     End If
     
     If langue <> "FR" And langue <> "ENG" Then
-        MsgBox "Erreur: La langue doit être FR ou ENG (cellule O7)", vbCritical, "Erreur Langue"
+        MsgBox "Erreur: La langue doit Ãªtre FR ou ENG (cellule O7)", vbCritical, "Erreur Langue"
         Exit Sub
     End If
     
-    '--- DÉTERMINATION DU TYPE DE LIVRABLE ---
+    '--- DÃ‰TERMINATION DU TYPE DE LIVRABLE ---
     If InStr(nomLivrable, "PS 8002") > 0 Then
         typeLivrable = "PS"
     ElseIf InStr(nomLivrable, "PP 8002") > 0 Then
@@ -89,20 +89,20 @@ Public Sub Generer_Livrable()
         Exit Sub
     End If
     
-    Debug.Print "Template trouvé: " & templatePath
+    Debug.Print "Template trouvÃ©: " & templatePath
     
-    '--- GÉNÉRATION SELON LE TYPE ---
+    '--- GÃ‰NÃ‰RATION SELON LE TYPE ---
     If typeLivrable = "PS" Then
         ' Cas PS : Excel sans annexes
         Call Generer_PS_Global(templatePath, nomLivrable, langue)
-        messageRecap = "Livrable PS Excel généré avec succès"
+        messageRecap = "Livrable PS Excel gÃ©nÃ©rÃ© avec succÃ¨s"
         
     ElseIf typeLivrable = "PP" Or typeLivrable = "SOW" Then
         ' Cas PP/SOW : Word avec annexes
         Dim WordApp As Object
         Dim WordDoc As Object
         
-        ' Démarrage de Word
+        ' DÃ©marrage de Word
         On Error Resume Next
         Set WordApp = GetObject(, "Word.Application")
         If Err.Number <> 0 Then
@@ -113,10 +113,10 @@ Public Sub Generer_Livrable()
         WordApp.Visible = True
         Set WordDoc = WordApp.Documents.Open(templatePath)
         
-        ' Détecter la langue de Word une fois pour toutes
+        ' DÃ©tecter la langue de Word une fois pour toutes
         Call DetecterLangueWord(WordApp)
         
-        ' Insertion des annexes selon les cases cochées
+        ' Insertion des annexes selon les cases cochÃ©es
         annexesGenerees = ""
         If annexe1 Then
             Call InsererAnnexe(WordApp, WordDoc, nomLivrable, langue, 1)
@@ -135,36 +135,36 @@ Public Sub Generer_Livrable()
             annexesGenerees = annexesGenerees & "4"
         End If
         
-        ' MISE À JOUR DU SOMMAIRE APRÈS INSERTION DES ANNEXES
+        ' MISE Ã€ JOUR DU SOMMAIRE APRÃˆS INSERTION DES ANNEXES
         Call MettreAJourSommaire(WordDoc)
         
         If annexesGenerees <> "" Then
-            annexesGenerees = "Annexes insérées: " & annexesGenerees
+            annexesGenerees = "Annexes insÃ©rÃ©es: " & annexesGenerees
         Else
-            annexesGenerees = "Aucune annexe insérée"
+            annexesGenerees = "Aucune annexe insÃ©rÃ©e"
         End If
         
-        messageRecap = "Livrable " & typeLivrable & " Word généré avec succès" & vbCrLf & annexesGenerees
+        messageRecap = "Livrable " & typeLivrable & " Word gÃ©nÃ©rÃ© avec succÃ¨s" & vbCrLf & annexesGenerees
     End If
     
-    '--- MESSAGE RÉCAPITULATIF ---
+    '--- MESSAGE RÃ‰CAPITULATIF ---
     Dim tempsExecution As Double
     tempsExecution = Round(Timer - startTime, 2)
     
-    MsgBox "? GÉNÉRATION TERMINÉE" & vbCrLf & vbCrLf & _
+    MsgBox "? GÃ‰NÃ‰RATION TERMINÃ‰E" & vbCrLf & vbCrLf & _
            "?? Livrable: " & nomLivrable & vbCrLf & _
            "?? Langue: " & langue & vbCrLf & _
            messageRecap & vbCrLf & _
-           "?? Temps d'exécution: " & tempsExecution & " secondes", _
-           vbInformation, "Succès"
+           "?? Temps d'exÃ©cution: " & tempsExecution & " secondes", _
+           vbInformation, "SuccÃ¨s"
     
-    Debug.Print "=== FIN GÉNÉRATION LIVRABLE ==="
+    Debug.Print "=== FIN GÃ‰NÃ‰RATION LIVRABLE ==="
     Debug.Print "Temps total: " & tempsExecution & " secondes"
     
     Exit Sub
 
 ErrHandler:
-    MsgBox "? Erreur lors de la génération:" & vbCrLf & _
+    MsgBox "? Erreur lors de la gÃ©nÃ©ration:" & vbCrLf & _
            "Code: " & Err.Number & vbCrLf & _
            "Description: " & Err.Description, _
            vbCritical, "Erreur"
@@ -173,21 +173,21 @@ End Sub
 
 '==============================================================================
 ' FONCTION: ViderPressePapier
-' Vide complètement le presse-papier Excel et système
+' Vide complÃ¨tement le presse-papier Excel et systÃ¨me
 '==============================================================================
 Private Sub ViderPressePapier()
     On Error Resume Next
     
-    ' Méthode 1: Vider le presse-papier Excel
+    ' MÃ©thode 1: Vider le presse-papier Excel
     Application.CutCopyMode = False
     
-    ' Méthode 2: Copier une cellule vide pour nettoyer
+    ' MÃ©thode 2: Copier une cellule vide pour nettoyer
     Dim wsTemp As Worksheet
     Set wsTemp = ThisWorkbook.Worksheets(1)
     wsTemp.Range("A1").Copy
     Application.CutCopyMode = False
     
-    ' Méthode 3: Utiliser l'API Windows pour vider le presse-papier système
+    ' MÃ©thode 3: Utiliser l'API Windows pour vider le presse-papier systÃ¨me
     #If VBA7 Then
         Dim result As LongPtr
     #Else
@@ -199,13 +199,13 @@ Private Sub ViderPressePapier()
     CreateObject("htmlfile").parentWindow.clipboardData.clearData
     On Error GoTo 0
     
-    Debug.Print "? Presse-papier vidé"
+    Debug.Print "? Presse-papier vidÃ©"
     
     On Error GoTo 0
 End Sub
 
 '==============================================================================
-' FONCTION: CollerTableauAvecRetry - VERSION CORRIGÉE
+' FONCTION: CollerTableauAvecRetry - VERSION CORRIGÃ‰E
 ' Colle un tableau Excel dans Word avec recopie avant chaque tentative
 '==============================================================================
 Private Function CollerTableauAvecRetry(anchor As Object, rngSource As Range, Optional contextInfo As String = "") As Boolean
@@ -219,26 +219,26 @@ Private Function CollerTableauAvecRetry(anchor As Object, rngSource As Range, Op
     For tentative = 1 To MAX_TENTATIVES
         On Error Resume Next
         
-        ' RECOPIER à chaque tentative (crucial!)
+        ' RECOPIER Ã  chaque tentative (crucial!)
         rngSource.Copy
         DoEvents
         
         ' Tentative de collage
         anchor.PasteExcelTable False, False, False
         
-        ' Vérifier si le collage a réussi
+        ' VÃ©rifier si le collage a rÃ©ussi
         If Err.Number = 0 Then
             succes = True
             If tentative > 1 Then
-                Debug.Print "? Collage réussi à la tentative " & tentative & IIf(contextInfo <> "", " [" & contextInfo & "]", "")
+                Debug.Print "? Collage rÃ©ussi Ã  la tentative " & tentative & IIf(contextInfo <> "", " [" & contextInfo & "]", "")
             End If
             Exit For
         Else
-            Debug.Print "?? Tentative " & tentative & "/" & MAX_TENTATIVES & " échouée" & _
+            Debug.Print "?? Tentative " & tentative & "/" & MAX_TENTATIVES & " Ã©chouÃ©e" & _
                        IIf(contextInfo <> "", " [" & contextInfo & "]", "") & " - Erreur: " & Err.Description
             Err.Clear
             
-            ' Attendre avant de réessayer (délai progressif)
+            ' Attendre avant de rÃ©essayer (dÃ©lai progressif)
             delai = 0.5 * tentative  ' 0.5s, 1s, 1.5s
             Application.Wait Now + TimeValue("0:00:0" & Format(delai, "0"))
             DoEvents
@@ -250,33 +250,33 @@ Private Function CollerTableauAvecRetry(anchor As Object, rngSource As Range, Op
     CollerTableauAvecRetry = succes
     
     If Not succes Then
-        Debug.Print "? ÉCHEC DÉFINITIF: Impossible de coller après " & MAX_TENTATIVES & " tentatives" & _
+        Debug.Print "? Ã‰CHEC DÃ‰FINITIF: Impossible de coller aprÃ¨s " & MAX_TENTATIVES & " tentatives" & _
                    IIf(contextInfo <> "", " [" & contextInfo & "]", "")
     End If
 End Function
 
 '==============================================================================
 ' FONCTION: DetecterLangueWord
-' Détecte si Word est en français ou anglais et mémorise le résultat
+' DÃ©tecte si Word est en franÃ§ais ou anglais et mÃ©morise le rÃ©sultat
 '==============================================================================
 Private Sub DetecterLangueWord(WordApp As Object)
     On Error Resume Next
     
-    ' Tentative de détecter via LanguageSettings (Office 2007+)
+    ' Tentative de dÃ©tecter via LanguageSettings (Office 2007+)
     Dim langID As Long
     langID = WordApp.LanguageSettings.LanguageID(2) ' 2 = msoLanguageIDUI
     
-    ' Français : 1036, Anglais : 1033 (US) ou 2057 (UK)
+    ' FranÃ§ais : 1036, Anglais : 1033 (US) ou 2057 (UK)
     If langID = 1036 Then
         g_WordLanguage = "FR"
-        Debug.Print "? Word détecté en FRANÇAIS (langID: " & langID & ")"
+        Debug.Print "? Word dÃ©tectÃ© en FRANÃ‡AIS (langID: " & langID & ")"
     ElseIf langID = 1033 Or langID = 2057 Then
         g_WordLanguage = "EN"
-        Debug.Print "? Word détecté en ANGLAIS (langID: " & langID & ")"
+        Debug.Print "? Word dÃ©tectÃ© en ANGLAIS (langID: " & langID & ")"
     Else
         ' Fallback : on essaiera les deux versions
         g_WordLanguage = ""
-        Debug.Print "?? Langue Word non détectée (langID: " & langID & "), mode auto"
+        Debug.Print "?? Langue Word non dÃ©tectÃ©e (langID: " & langID & "), mode auto"
     End If
     
     On Error GoTo 0
@@ -284,7 +284,7 @@ End Sub
 
 '==============================================================================
 ' FONCTION: MettreAJourSommaire
-' Met à jour toutes les tables des matières dans le document Word
+' Met Ã  jour toutes les tables des matiÃ¨res dans le document Word
 '==============================================================================
 Private Sub MettreAJourSommaire(WordDoc As Object)
     On Error Resume Next
@@ -293,13 +293,13 @@ Private Sub MettreAJourSommaire(WordDoc As Object)
     
     compteur = 0
     
-    ' Parcourir toutes les tables des matières du document
+    ' Parcourir toutes les tables des matiÃ¨res du document
     For Each toc In WordDoc.TablesOfContents
         toc.Update
         compteur = compteur + 1
     Next toc
     
-    ' Si aucune table des matières classique, essayer les champs TOC
+    ' Si aucune table des matiÃ¨res classique, essayer les champs TOC
     If compteur = 0 Then
         Dim fld As Object
         For Each fld In WordDoc.Fields
@@ -311,10 +311,10 @@ Private Sub MettreAJourSommaire(WordDoc As Object)
     End If
     
     If Err.Number <> 0 Then
-        Debug.Print "Avertissement: Impossible de mettre à jour le sommaire - " & Err.Description
+        Debug.Print "Avertissement: Impossible de mettre Ã  jour le sommaire - " & Err.Description
         Err.Clear
     Else
-        Debug.Print "? Sommaire mis à jour (" & compteur & " table(s) trouvée(s))"
+        Debug.Print "? Sommaire mis Ã  jour (" & compteur & " table(s) trouvÃ©e(s))"
     End If
     
     On Error GoTo 0
@@ -322,10 +322,10 @@ End Sub
 
 '==============================================================================
 ' FONCTION: ObtenirNomStyle
-' Retourne le nom du style adapté à la langue de Word
+' Retourne le nom du style adaptÃ© Ã  la langue de Word
 '==============================================================================
 Private Function ObtenirNomStyle(styleGenerique As String) As String
-    ' Si langue détectée, retourner directement
+    ' Si langue dÃ©tectÃ©e, retourner directement
     If g_WordLanguage = "FR" Then
         Select Case styleGenerique
             Case "Heading 1": ObtenirNomStyle = "Titre 1"
@@ -337,17 +337,17 @@ Private Function ObtenirNomStyle(styleGenerique As String) As String
             Case Else: ObtenirNomStyle = styleGenerique
         End Select
     ElseIf g_WordLanguage = "EN" Then
-        ' Déjà en anglais, retourner tel quel
+        ' DÃ©jÃ  en anglais, retourner tel quel
         ObtenirNomStyle = styleGenerique
     Else
-        ' Mode auto : retourner le style générique (Heading X)
+        ' Mode auto : retourner le style gÃ©nÃ©rique (Heading X)
         ObtenirNomStyle = styleGenerique
     End If
 End Function
 
 '==============================================================================
 ' FONCTION: AppliquerStyleRobuste
-' Applique un style de manière robuste (essaie FR puis EN si échec)
+' Applique un style de maniÃ¨re robuste (essaie FR puis EN si Ã©chec)
 '==============================================================================
 Private Sub AppliquerStyleRobuste(rng As Object, styleGenerique As String)
     On Error Resume Next
@@ -355,14 +355,14 @@ Private Sub AppliquerStyleRobuste(rng As Object, styleGenerique As String)
     
     styleNom = ObtenirNomStyle(styleGenerique)
     
-    ' Tentative 1 : avec le style détecté ou générique
+    ' Tentative 1 : avec le style dÃ©tectÃ© ou gÃ©nÃ©rique
     rng.Style = styleNom
     
-    ' Si échec et qu'on n'avait pas détecté la langue
+    ' Si Ã©chec et qu'on n'avait pas dÃ©tectÃ© la langue
     If Err.Number <> 0 And g_WordLanguage = "" Then
         Err.Clear
         
-        ' Essayer la version française
+        ' Essayer la version franÃ§aise
         Select Case styleGenerique
             Case "Heading 1": styleNom = "Titre 1"
             Case "Heading 2": styleNom = "Titre 2"
@@ -374,17 +374,17 @@ Private Sub AppliquerStyleRobuste(rng As Object, styleGenerique As String)
         
         rng.Style = styleNom
         
-        ' Si ça marche, mémoriser que Word est en français
+        ' Si Ã§a marche, mÃ©moriser que Word est en franÃ§ais
         If Err.Number = 0 Then
             g_WordLanguage = "FR"
-            Debug.Print "? Langue Word détectée: FRANÇAIS (par test de style)"
+            Debug.Print "? Langue Word dÃ©tectÃ©e: FRANÃ‡AIS (par test de style)"
         Else
-            ' Sinon, considérer que c'est anglais
+            ' Sinon, considÃ©rer que c'est anglais
             Err.Clear
             rng.Style = styleGenerique
             If Err.Number = 0 Then
                 g_WordLanguage = "EN"
-                Debug.Print "? Langue Word détectée: ANGLAIS (par test de style)"
+                Debug.Print "? Langue Word dÃ©tectÃ©e: ANGLAIS (par test de style)"
             End If
         End If
     End If
@@ -401,14 +401,14 @@ Private Function TrouverTemplate(nomLivrable As String, langue As String, basePa
     Dim extension As String
     Dim cheminComplet As String
     
-    ' Déterminer le dossier selon la langue
+    ' DÃ©terminer le dossier selon la langue
     If langue = "FR" Then
         dossierLangue = "\3-Dossier - livrables\Fr\"
     Else
         dossierLangue = "\3-Dossier - livrables\Eng\"
     End If
     
-    ' Déterminer l'extension selon le type
+    ' DÃ©terminer l'extension selon le type
     If InStr(nomLivrable, "PS 8002") > 0 Then
         extension = ".xlsx"
     Else
@@ -418,10 +418,10 @@ Private Function TrouverTemplate(nomLivrable As String, langue As String, basePa
     ' Mapper le nom du livrable au nom du fichier template
     Select Case True
         ' ============================================
-        ' PS Templates - FRANÇAIS
+        ' PS Templates - FRANÃ‡AIS
         ' ============================================
         Case InStr(nomLivrable, "PS 8002") > 0 And langue = "FR" And _
-             (InStr(nomLivrable, "Général") > 0 Or InStr(nomLivrable, "General") > 0)
+             (InStr(nomLivrable, "GÃ©nÃ©ral") > 0 Or InStr(nomLivrable, "General") > 0)
             nomFichier = "XXXXXXX-XXX-PS-8200-XXXX-0 (Fr)"
             
         Case InStr(nomLivrable, "PS 8002") > 0 And langue = "FR" And InStr(nomLivrable, "E&I") > 0
@@ -439,7 +439,7 @@ Private Function TrouverTemplate(nomLivrable As String, langue As String, basePa
         ' PS Templates - ANGLAIS
         ' ============================================
         Case InStr(nomLivrable, "PS 8002") > 0 And langue = "ENG" And _
-             (InStr(nomLivrable, "Général") > 0 Or InStr(nomLivrable, "General") > 0)
+             (InStr(nomLivrable, "GÃ©nÃ©ral") > 0 Or InStr(nomLivrable, "General") > 0)
             nomFichier = "XXXXXXX-XXX-PS-8200-XXXX-0 (Eng)"
             
         Case InStr(nomLivrable, "PS 8002") > 0 And langue = "ENG" And InStr(nomLivrable, "E&I") > 0
@@ -454,7 +454,7 @@ Private Function TrouverTemplate(nomLivrable As String, langue As String, basePa
             nomFichier = "XXXXXXX-XXX-PS-8200-TSF_Civil_Works_Preparatory_Works-XXXX-0 (Eng)"
             
         ' ============================================
-        ' PP Templates - FRANÇAIS
+        ' PP Templates - FRANÃ‡AIS
         ' ============================================
         Case InStr(nomLivrable, "PP 8002") > 0 And langue = "FR"
             nomFichier = "XXXXXXX-XXX-PP-8200-XXXX-0 (Fr)"
@@ -466,10 +466,10 @@ Private Function TrouverTemplate(nomLivrable As String, langue As String, basePa
             nomFichier = "XXXXXXX-XXX-PP-8200-XXXX-0 (Eng)"
             
         ' ============================================
-        ' SOW Templates - FRANÇAIS
+        ' SOW Templates - FRANÃ‡AIS
         ' ============================================
         Case InStr(nomLivrable, "SOW 8002") > 0 And langue = "FR" And _
-             (InStr(nomLivrable, "Général") > 0 Or InStr(nomLivrable, "General") > 0)
+             (InStr(nomLivrable, "GÃ©nÃ©ral") > 0 Or InStr(nomLivrable, "General") > 0)
             nomFichier = "XXXXXXX-XXX-SOW-8200-XXXX-0 (Fr)"
             
         Case InStr(nomLivrable, "SOW 8002") > 0 And langue = "FR" And InStr(nomLivrable, "E&I") > 0
@@ -487,7 +487,7 @@ Private Function TrouverTemplate(nomLivrable As String, langue As String, basePa
         ' SOW Templates - ANGLAIS
         ' ============================================
         Case InStr(nomLivrable, "SOW 8002") > 0 And langue = "ENG" And _
-             (InStr(nomLivrable, "Général") > 0 Or InStr(nomLivrable, "General") > 0)
+             (InStr(nomLivrable, "GÃ©nÃ©ral") > 0 Or InStr(nomLivrable, "General") > 0)
             nomFichier = "XXXXXXX-XXX-SOW-8200-XXXX-0 (Eng)"
             
         Case InStr(nomLivrable, "SOW 8002") > 0 And langue = "ENG" And InStr(nomLivrable, "E&I") > 0
@@ -502,30 +502,30 @@ Private Function TrouverTemplate(nomLivrable As String, langue As String, basePa
             nomFichier = "XXXXXXX-XXX-SOW-8200-TSF_Civil_Works_Preparatory_Works-XXXX-0 (Eng)"
             
         Case Else
-            Debug.Print "? Aucun template trouvé pour: " & nomLivrable & " (" & langue & ")"
+            Debug.Print "? Aucun template trouvÃ© pour: " & nomLivrable & " (" & langue & ")"
             TrouverTemplate = ""
             Exit Function
     End Select
     
     cheminComplet = basePath & dossierLangue & nomFichier & extension
     
-    ' Vérifier si le fichier existe
+    ' VÃ©rifier si le fichier existe
     If Dir(cheminComplet) <> "" Then
         TrouverTemplate = cheminComplet
-        Debug.Print "? Template trouvé: " & nomFichier & extension
+        Debug.Print "? Template trouvÃ©: " & nomFichier & extension
     Else
-        Debug.Print "? Template non trouvé: " & cheminComplet
+        Debug.Print "? Template non trouvÃ©: " & cheminComplet
         TrouverTemplate = ""
     End If
 End Function
 
 '==============================================================================
-' PROCÉDURE: InsererAnnexe
+' PROCÃ‰DURE: InsererAnnexe
 '==============================================================================
 Private Sub InsererAnnexe(WordApp As Object, WordDoc As Object, nomLivrable As String, langue As String, numAnnexe As Integer)
     On Error GoTo ErrAnnexe
     
-    ' Déterminer quelle macro appeler selon le livrable et l'annexe
+    ' DÃ©terminer quelle macro appeler selon le livrable et l'annexe
     Select Case numAnnexe
         Case 1
             Call ExecuterAnnexe1(WordApp, WordDoc, nomLivrable, langue)
@@ -549,8 +549,8 @@ End Sub
 Private Sub ExecuterAnnexe1(WordApp As Object, WordDoc As Object, nomLivrable As String, langue As String)
     Dim mode As String
     
-    ' Déterminer le mode
-    If InStr(nomLivrable, "Général") > 0 Or InStr(nomLivrable, "General") > 0 Then
+    ' DÃ©terminer le mode
+    If InStr(nomLivrable, "GÃ©nÃ©ral") > 0 Or InStr(nomLivrable, "General") > 0 Then
         mode = ""
     ElseIf InStr(nomLivrable, "GC") > 0 Or InStr(nomLivrable, "Civil Works") > 0 Then
         mode = "GC"
@@ -560,11 +560,11 @@ Private Sub ExecuterAnnexe1(WordApp As Object, WordDoc As Object, nomLivrable As
         mode = "EI"
     End If
     
-    ' Appeler la fonction ExportAnnexe1 adaptée
+    ' Appeler la fonction ExportAnnexe1 adaptÃ©e
     Call ExportAnnexe1_Adapted(WordApp, WordDoc, langue, mode)
     
-    ' PAUSE DE 3 SECONDES après collage
-    Debug.Print "? Pause de 3 secondes après Annexe 1..."
+    ' PAUSE DE 3 SECONDES aprÃ¨s collage
+    Debug.Print "? Pause de 3 secondes aprÃ¨s Annexe 1..."
     Application.Wait Now + TimeValue("0:00:03")
     
     ' VIDER LE PRESSE-PAPIER
@@ -583,7 +583,7 @@ Private Sub ExportAnnexe1_Adapted(WordApp As Object, WordDoc As Object, lang As 
     Dim arrFiltre As Variant, arrAG As Variant, r As Long, idxCol As Long
     Dim filtreCol As String, titre As String
     
-    ' Déterminer filtreCol et titre selon filtreType
+    ' DÃ©terminer filtreCol et titre selon filtreType
     Select Case filtreType
         Case "GC": filtreCol = "X": titre = "GC"
         Case "BM": filtreCol = "Y": titre = "BM"
@@ -606,7 +606,7 @@ Private Sub ExportAnnexe1_Adapted(WordApp As Object, WordDoc As Object, lang As 
     Set wbTemp = Workbooks.Add: Set wsFiltered = wbTemp.Worksheets(1)
     wsFiltered.Name = "Donnees_Filtrees_" & titre
     
-    ' Déterminer bornes
+    ' DÃ©terminer bornes
     lastRow = LastUsedRowInRange(wsSource, IIf(lang = "FR", "L", "AG"))
     If lastRow < 3 Then lastRow = 501
     
@@ -624,27 +624,27 @@ Private Sub ExportAnnexe1_Adapted(WordApp As Object, WordDoc As Object, lang As 
     End With
     Application.CutCopyMode = False
     
-    ' Filtrage en mémoire
+    ' Filtrage en mÃ©moire
     currentLastRow = LastUsedRow(wsFiltered)
     If currentLastRow > 1 Then
         arrAG = wsFiltered.Range("K1:K" & currentLastRow).Value2
         
         If filtreCol <> "" Then
-            ' Mode spécifique (GC, BM, EI) - avec filtre
+            ' Mode spÃ©cifique (GC, BM, EI) - avec filtre
             idxCol = ColIndex(filtreCol, lang)
             arrFiltre = wsFiltered.Range(ColLetter(idxCol) & "1:" & ColLetter(idxCol) & currentLastRow).Value2
             For r = currentLastRow To 2 Step -1
                 If ShouldDeleteRow(arrAG, r, arrFiltre) Then wsFiltered.Rows(r).Delete
             Next r
         Else
-            ' Mode Général - sans filtre
+            ' Mode GÃ©nÃ©ral - sans filtre
             For r = currentLastRow To 2 Step -1
                 If ShouldDeleteRow(arrAG, r) Then wsFiltered.Rows(r).Delete
             Next r
         End If
     End If
     
-    ' Définir la plage finale
+    ' DÃ©finir la plage finale
     currentLastRow = LastUsedRow(wsFiltered)
     Set rngFinal = wsFiltered.Range("A1:K" & IIf(currentLastRow >= 1, currentLastRow, 1))
     
@@ -667,7 +667,7 @@ Private Sub ExportAnnexe1_Adapted(WordApp As Object, WordDoc As Object, lang As 
     
     ' Coller avec retry
     If Not CollerTableauAvecRetry(anchor, rngFinal, "Annexe 1") Then
-        Debug.Print "? Échec définitif du collage Annexe 1"
+        Debug.Print "? Ã‰chec dÃ©finitif du collage Annexe 1"
         GoTo CleanUp
     End If
     
@@ -680,7 +680,7 @@ Private Sub ExportAnnexe1_Adapted(WordApp As Object, WordDoc As Object, lang As 
             .Range.ParagraphFormat.SpaceAfter = 0: .Rows.HeightRule = 1: .Rows.Height = 0
             .Range.Font.Size = 6
         End With
-        Debug.Print "? Annexe 1 mise en forme appliquée"
+        Debug.Print "? Annexe 1 mise en forme appliquÃ©e"
     End If
     On Error GoTo 0
     
@@ -697,10 +697,10 @@ Private Sub ExecuterAnnexe2(WordApp As Object, WordDoc As Object, nomLivrable As
     Dim mode As String
     Dim colFiltre As Long
     
-    ' Déterminer le mode et la colonne de filtrage
-    If InStr(nomLivrable, "Général") > 0 Or InStr(nomLivrable, "General") > 0 Then
+    ' DÃ©terminer le mode et la colonne de filtrage
+    If InStr(nomLivrable, "GÃ©nÃ©ral") > 0 Or InStr(nomLivrable, "General") > 0 Then
         mode = "AG"
-        colFiltre = 0  ' Pas de filtre pour Général
+        colFiltre = 0  ' Pas de filtre pour GÃ©nÃ©ral
     ElseIf InStr(nomLivrable, "GC") > 0 Or InStr(nomLivrable, "Civil Works") > 0 Then
         mode = "GC"
         colFiltre = 19  ' Colonne S
@@ -712,11 +712,11 @@ Private Sub ExecuterAnnexe2(WordApp As Object, WordDoc As Object, nomLivrable As
         colFiltre = 21  ' Colonne U
     End If
     
-    ' Appeler ExecuterAnnexe2_Adapted avec WordDoc déjà ouvert
+    ' Appeler ExecuterAnnexe2_Adapted avec WordDoc dÃ©jÃ  ouvert
     Call ExecuterAnnexe2_Adapted(WordApp, WordDoc, mode, langue, colFiltre)
     
-    ' PAUSE DE 3 SECONDES après collage
-    Debug.Print "? Pause de 3 secondes après Annexe 2..."
+    ' PAUSE DE 3 SECONDES aprÃ¨s collage
+    Debug.Print "? Pause de 3 secondes aprÃ¨s Annexe 2..."
     Application.Wait Now + TimeValue("0:00:03")
     
     ' VIDER LE PRESSE-PAPIER
@@ -729,11 +729,11 @@ Private Sub ExecuterAnnexe3(WordApp As Object, WordDoc As Object, nomLivrable As
     Call ExecuterAnnexe3b(WordApp, WordDoc, langue)
     Call ExecuterAnnexe3c(WordApp, WordDoc, langue)
     
-    ' PAUSE DE 3 SECONDES après TOUTE l'Annexe 3
-    Debug.Print "? Pause de 3 secondes après Annexe 3 complète (3a+3b+3c)..."
+    ' PAUSE DE 3 SECONDES aprÃ¨s TOUTE l'Annexe 3
+    Debug.Print "? Pause de 3 secondes aprÃ¨s Annexe 3 complÃ¨te (3a+3b+3c)..."
     Application.Wait Now + TimeValue("0:00:03")
     
-    ' VIDER LE PRESSE-PAPIER APRÈS TOUTE L'ANNEXE 3
+    ' VIDER LE PRESSE-PAPIER APRÃˆS TOUTE L'ANNEXE 3
     Call ViderPressePapier
 End Sub
 
@@ -767,20 +767,20 @@ Private Sub ExecuterAnnexe4(WordApp As Object, WordDoc As Object, _
     Dim shpCount As Long
     Dim ils As Object
     
-    Debug.Print "=== Début Annexe 4 ==="
+    Debug.Print "=== DÃ©but Annexe 4 ==="
     
-    ' 1) Exécuter la macro de dessin Excel
+    ' 1) ExÃ©cuter la macro de dessin Excel
     On Error Resume Next
     Application.Run "TSF_Layout_Array"
     If Err.Number <> 0 Then
         Debug.Print "Erreur TSF_Layout_Array : " & Err.Number & " - " & Err.Description
         Err.Clear
     Else
-        Debug.Print "TSF_Layout_Array exécutée correctement"
+        Debug.Print "TSF_Layout_Array exÃ©cutÃ©e correctement"
     End If
     On Error GoTo ErrAnnexe4
     
-    ' 2) Récupérer la feuille Annexe 4
+    ' 2) RÃ©cupÃ©rer la feuille Annexe 4
     Set ws = ThisWorkbook.Worksheets("2.6-PP & SOW Annexe 4")
     If ws Is Nothing Then
         Debug.Print "Feuille 2.6-PP & SOW Annexe 4 introuvable"
@@ -790,10 +790,10 @@ Private Sub ExecuterAnnexe4(WordApp As Object, WordDoc As Object, _
     ws.Activate
     ws.Range("A1").Select
     
-    ' Zone à capturer (adapter si besoin)
+    ' Zone Ã  capturer (adapter si besoin)
     Set rngScreenshot = ws.Range("E1:AZ26")
     
-    ' Info debug : shapes présents dans la zone ?
+    ' Info debug : shapes prÃ©sents dans la zone ?
     shpCount = 0
     For Each shp In ws.Shapes
         If Not Application.Intersect(shp.TopLeftCell, rngScreenshot) Is Nothing Then
@@ -845,7 +845,7 @@ Private Sub ExecuterAnnexe4(WordApp As Object, WordDoc As Object, _
             Err.Clear
             On Error GoTo ErrAnnexe4
         Else
-            ' Vérifier qu'on a bien une image collée
+            ' VÃ©rifier qu'on a bien une image collÃ©e
             If WordApp.Selection.InlineShapes.Count > 0 Then
                 Set ils = WordApp.Selection.InlineShapes(1)
                 succes = True
@@ -857,7 +857,7 @@ Private Sub ExecuterAnnexe4(WordApp As Object, WordDoc As Object, _
         On Error GoTo ErrAnnexe4
         
         If succes Then
-            Debug.Print "Collage Annexe 4 OK à la tentative " & tentative
+            Debug.Print "Collage Annexe 4 OK Ã  la tentative " & tentative
             
             ' Optionnel : centrer le paragraphe (sans redimensionner)
             If Not ils Is Nothing Then
@@ -867,20 +867,20 @@ Private Sub ExecuterAnnexe4(WordApp As Object, WordDoc As Object, _
             
             Exit For
         Else
-            Debug.Print "Tentative " & tentative & " : aucun InlineShape détecté"
+            Debug.Print "Tentative " & tentative & " : aucun InlineShape dÃ©tectÃ©"
             Application.Wait Now + TimeSerial(0, 0, 1)
         End If
     Next tentative
     
     If Not succes Then
-        Debug.Print "Echec définitif : pas de collage Annexe 4 après 3 tentatives"
-        MsgBox "Annexe 4 : la capture n'a pas pu être collée automatiquement." & vbCrLf & _
-               "Vérifier le dessin sur la feuille '2.6-PP & SOW Annexe 4'.", _
+        Debug.Print "Echec dÃ©finitif : pas de collage Annexe 4 aprÃ¨s 3 tentatives"
+        MsgBox "Annexe 4 : la capture n'a pas pu Ãªtre collÃ©e automatiquement." & vbCrLf & _
+               "VÃ©rifier le dessin sur la feuille '2.6-PP & SOW Annexe 4'.", _
                vbExclamation, "Annexe 4"
     End If
     
     ' Pause de 3 secondes, puis nettoyage presse-papiers
-    Debug.Print "Pause de 3 secondes après Annexe 4..."
+    Debug.Print "Pause de 3 secondes aprÃ¨s Annexe 4..."
     Application.Wait Now + TimeSerial(0, 0, 3)
     
     Application.CutCopyMode = False
@@ -919,13 +919,13 @@ Private Sub ExecuterPS_Adapted(ByVal mode As String, ByVal langue As String, ByV
     
     Set wbActuel = ThisWorkbook
     
-    ' Vérifie template
+    ' VÃ©rifie template
     If Dir(cheminTemplate) = "" Then
         MsgBox "Erreur: Le fichier template '" & cheminTemplate & "' est introuvable.", vbCritical
         Exit Sub
     End If
     
-    ' Vérifie source
+    ' VÃ©rifie source
     On Error Resume Next
     Set wsSource = wbActuel.Worksheets(feuilleSource)
     On Error GoTo 0
@@ -942,7 +942,7 @@ Private Sub ExecuterPS_Adapted(ByVal mode As String, ByVal langue As String, ByV
     ' Ouvre template
     Set wbTemplate = Workbooks.Open(cheminTemplate)
     
-    ' (Re)crée Cfinal
+    ' (Re)crÃ©e Cfinal
     On Error Resume Next
     wbTemplate.Worksheets("Cfinal").Delete
     On Error GoTo 0
@@ -958,7 +958,7 @@ Private Sub ExecuterPS_Adapted(ByVal mode As String, ByVal langue As String, ByV
     End With
     Application.CutCopyMode = False
     
-    ' Détermination bornes
+    ' DÃ©termination bornes
     lastRow = LastUsedRow(wsNew)
     If lastRow < 2 Then GoTo PostClean
     lastCol = LastUsedCol(wsNew)
@@ -972,7 +972,7 @@ Private Sub ExecuterPS_Adapted(ByVal mode As String, ByVal langue As String, ByV
         End If
     Next c
     
-    ' Charge colonnes mémoire
+    ' Charge colonnes mÃ©moire
     arrC = wsNew.Range(wsNew.Cells(1, colC), wsNew.Cells(lastRow, colC)).Value2
     
     If lastCol >= colY Then
@@ -1113,7 +1113,7 @@ Private Function ShouldDeleteRow_PS(arrC As Variant, arrY As Variant, arrSep As 
     If langue = "ENG" And cRaw = "fr" Then
         ShouldDeleteRow_PS = True: Exit Function
     End If
-    If yRaw = "non utilisé" Or yRaw = "non utilise" Then
+    If yRaw = "non utilisÃ©" Or yRaw = "non utilise" Then
         ShouldDeleteRow_PS = True: Exit Function
     End If
     If colSep > 0 And sRaw = " " Then
@@ -1158,14 +1158,14 @@ Private Function TraiterLigneAnnexe2(ws As Worksheet, WordDoc As Object, Inserti
     langue = UCase(Trim(ws.Cells(r, COL_LANGUE).Value))
     flag = Trim(ws.Cells(r, COL_FLAG).Value)
     
-    ' Filtre 1: Vérifier la langue
+    ' Filtre 1: VÃ©rifier la langue
     If langue <> UCase(langueAttendue) Then Exit Function
     
-    ' Filtre 2: Vérifier le flag "Utilisé"
+    ' Filtre 2: VÃ©rifier le flag "UtilisÃ©"
     If Not CommenceParUtilise(flag) Then Exit Function
     
-    ' Filtre 3: Vérifier la colonne spécifique (GC/BM/EI)
-    ' Si COL_FILTRE > 0, on doit vérifier que la valeur = "X"
+    ' Filtre 3: VÃ©rifier la colonne spÃ©cifique (GC/BM/EI)
+    ' Si COL_FILTRE > 0, on doit vÃ©rifier que la valeur = "X"
     If COL_FILTRE > 0 Then
         valeurFiltre = UCase(Trim(ws.Cells(r, COL_FILTRE).Value))
         ' Si la valeur n'est PAS "X", on ignore cette ligne
@@ -1198,8 +1198,8 @@ End Function
 Private Function CommenceParUtilise(ByVal t As String) As Boolean
     Dim n As String
     n = LCase(Trim(t))
-    n = Replace(n, "é", "e"): n = Replace(n, "è", "e")
-    n = Replace(n, "ê", "e"): n = Replace(n, "ë", "e")
+    n = Replace(n, "Ã©", "e"): n = Replace(n, "Ã¨", "e")
+    n = Replace(n, "Ãª", "e"): n = Replace(n, "Ã«", "e")
     CommenceParUtilise = (Left(n, 7) = "utilise")
 End Function
 
@@ -1207,7 +1207,7 @@ Private Sub InsererTitre(ByVal WordDoc As Object, ByVal InsertionRange As Object
     InsertionRange.InsertAfter txt & vbCr
     Dim r As Object: Set r = WordDoc.Range(InsertionRange.Start, InsertionRange.End)
     
-    ' Appliquer le style de manière robuste (gère FR/EN automatiquement)
+    ' Appliquer le style de maniÃ¨re robuste (gÃ¨re FR/EN automatiquement)
     Call AppliquerStyleRobuste(r, styleNom)
     
     InsertionRange.Collapse 0
@@ -1219,7 +1219,7 @@ Private Sub InsererTexte(ByVal InsertionRange As Object, ByVal txt As String)
 End Sub
 
 '==============================================================================
-' GÉNÉRATION PS GLOBALE
+' GÃ‰NÃ‰RATION PS GLOBALE
 '==============================================================================
 Private Sub Generer_PS_Global(templatePath As String, nomLivrable As String, langue As String)
     Dim mode As String
@@ -1232,7 +1232,7 @@ Private Sub Generer_PS_Global(templatePath As String, nomLivrable As String, lan
     
     If InStr(nomLivrable, "Modulaire") > 0 Or InStr(nomLivrable, "Modular") > 0 Then
         mode = "BM"
-        feuilleSource = "2.8-PS ITC Bâtiment Modulaire"
+        feuilleSource = "2.8-PS ITC BÃ¢timent Modulaire"
     ElseIf InStr(nomLivrable, "GC") > 0 Or InStr(nomLivrable, "Civil Works") > 0 Then
         mode = "GC"
         feuilleSource = "2.7-PS ITC Global"
@@ -1309,7 +1309,7 @@ Private Sub ExecuterAnnexe2_Adapted(WordApp As Object, WordDoc As Object, mode A
         If r Mod 50 = 0 Then DoEvents
     Next r
     
-    Debug.Print "Annexe 2 terminée - Lignes traitées: " & TotalRows & " | Lignes insérées: " & InsertedRows
+    Debug.Print "Annexe 2 terminÃ©e - Lignes traitÃ©es: " & TotalRows & " | Lignes insÃ©rÃ©es: " & InsertedRows
 End Sub
 
 ' ==========================================================================================================================================================
@@ -1376,7 +1376,7 @@ Private Sub ExecuterAnnexe3a(WordApp As Object, WordDoc As Object, langue As Str
     
     ' Coller avec retry (en passant la plage source)
     If Not CollerTableauAvecRetry(anchor, rngToCopy, "Annexe 3a") Then
-        Debug.Print "? Échec définitif du collage Annexe 3a"
+        Debug.Print "? Ã‰chec dÃ©finitif du collage Annexe 3a"
         Application.CutCopyMode = False
         Exit Sub
     End If
@@ -1394,9 +1394,9 @@ Private Sub ExecuterAnnexe3a(WordApp As Object, WordDoc As Object, langue As Str
             .Rows.Height = 0
         End With
         wordTable.Range.Font.Size = 8
-        Debug.Print "? Annexe 3a mise en forme appliquée"
+        Debug.Print "? Annexe 3a mise en forme appliquÃ©e"
     Else
-        Debug.Print "?? Impossible de récupérer le tableau pour mise en forme"
+        Debug.Print "?? Impossible de rÃ©cupÃ©rer le tableau pour mise en forme"
     End If
     On Error GoTo 0
     
@@ -1427,7 +1427,7 @@ Private Sub ExecuterAnnexe3b(WordApp As Object, WordDoc As Object, langue As Str
     With ws.Cells
         If langue = "FR" Then
             Set cellDebut = .Find("Cellule 6 Lignes Avant Premiere Cellule Range Annexe 3b", LookAt:=xlWhole)
-            Set cellFin = .Find("Cellule 2 Lignes Après Derniere Cellule Range Annexe 3b", LookAt:=xlWhole)
+            Set cellFin = .Find("Cellule 2 Lignes AprÃ¨s Derniere Cellule Range Annexe 3b", LookAt:=xlWhole)
         Else
             Set cellDebut = .Find("cell 6 rows before start of range of annexe 3b", LookAt:=xlWhole)
             Set cellFin = .Find("cell 2 rows after end of range of annexe 3b", LookAt:=xlWhole)
@@ -1524,12 +1524,12 @@ Private Sub ExporterBlocTableauOptimise(ws As Worksheet, WordDoc As Object, Word
     colonneCopieDebut = COLONNE_DEBUT + 2
     If colonneCopieDebut > COLONNE_FIN Then Exit Sub
     
-    ' Définir la plage source
+    ' DÃ©finir la plage source
     Set rngSource = ws.Range(ws.Cells(ligneDebut, colonneCopieDebut), ws.Cells(ligneFin, COLONNE_FIN))
     
     ' Coller avec retry (en passant la plage source)
     If Not CollerTableauAvecRetry(anchor, rngSource, "Annexe 3b - Tableau #" & (numTableau + 1)) Then
-        Debug.Print "? Échec définitif du collage tableau Annexe 3b #" & (numTableau + 1)
+        Debug.Print "? Ã‰chec dÃ©finitif du collage tableau Annexe 3b #" & (numTableau + 1)
         Application.CutCopyMode = False
         Exit Sub
     End If
@@ -1594,7 +1594,7 @@ Private Sub PretraiterLigne3b(ByVal ligne As Long, dataRange As Variant, ByRef i
     Exit Sub
 
 ErreurPretraitement:
-    Debug.Print "Erreur prétraitement ligne " & ligne & ": " & Err.Description
+    Debug.Print "Erreur prÃ©traitement ligne " & ligne & ": " & Err.Description
     info.EstVide = True
 End Sub
 
@@ -1607,7 +1607,7 @@ Private Sub AjouterTitre3b(WordDoc As Object, ByRef anchor As Object, ByVal text
     Set rng = WordDoc.Range(anchor.Start, anchor.Start)
     rng.Text = texte & vbCr
     
-    ' Appliquer le style de manière robuste (gère FR/EN automatiquement)
+    ' Appliquer le style de maniÃ¨re robuste (gÃ¨re FR/EN automatiquement)
     Call AppliquerStyleRobuste(rng, styleNom)
     
     anchor.SetRange rng.End, rng.End
@@ -1633,7 +1633,7 @@ Private Sub ExecuterAnnexe3c(WordApp As Object, WordDoc As Object, langue As Str
     If langue = "FR" Then
         With ws.Cells
             Set startCell = .Find("4 Lignes au dessus de debut Annexe 3c", LookAt:=xlWhole)
-            Set endCell = .Find("Cellule 4 Lignes Après Dernière Cellule Range Annexe 3c", LookAt:=xlWhole)
+            Set endCell = .Find("Cellule 4 Lignes AprÃ¨s DerniÃ¨re Cellule Range Annexe 3c", LookAt:=xlWhole)
         End With
     Else
         With ws.Cells
@@ -1682,7 +1682,7 @@ Private Sub ExecuterAnnexe3c(WordApp As Object, WordDoc As Object, langue As Str
     
     ' Coller avec retry (en passant la plage source)
     If Not CollerTableauAvecRetry(anchor, rngToCopy, "Annexe 3c") Then
-        Debug.Print "? Échec définitif du collage Annexe 3c"
+        Debug.Print "? Ã‰chec dÃ©finitif du collage Annexe 3c"
         Application.CutCopyMode = False
         Exit Sub
     End If
@@ -1700,9 +1700,9 @@ Private Sub ExecuterAnnexe3c(WordApp As Object, WordDoc As Object, langue As Str
             .Rows.Height = 0
             .Range.Font.Size = 8
         End With
-        Debug.Print "? Annexe 3c mise en forme appliquée"
+        Debug.Print "? Annexe 3c mise en forme appliquÃ©e"
     Else
-        Debug.Print "?? Impossible de récupérer le tableau pour mise en forme"
+        Debug.Print "?? Impossible de rÃ©cupÃ©rer le tableau pour mise en forme"
     End If
     On Error GoTo 0
     
@@ -1711,16 +1711,16 @@ End Sub
 
 '```
 
-'**? Modifications apportées:**
+'**? Modifications apportÃ©es:**
 
-'### ?? **Pause de 3 secondes intégrée:**
+'### ?? **Pause de 3 secondes intÃ©grÃ©e:**
 
-'1. **ExecuterAnnexe1** - Pause **APRÈS** le collage, **AVANT** ViderPressePapier
-'2. **ExecuterAnnexe2** - Pause **APRÈS** le collage, **AVANT** ViderPressePapier
-'3. **ExecuterAnnexe3** - Pause **APRÈS** toutes les sous-annexes (3a+3b+3c), **AVANT** ViderPressePapier
-'4. **ExecuterAnnexe4** - Pause **APRÈS** le collage, **AVANT** ViderPressePapier
+'1. **ExecuterAnnexe1** - Pause **APRÃˆS** le collage, **AVANT** ViderPressePapier
+'2. **ExecuterAnnexe2** - Pause **APRÃˆS** le collage, **AVANT** ViderPressePapier
+'3. **ExecuterAnnexe3** - Pause **APRÃˆS** toutes les sous-annexes (3a+3b+3c), **AVANT** ViderPressePapier
+'4. **ExecuterAnnexe4** - Pause **APRÃˆS** le collage, **AVANT** ViderPressePapier
 
-'### ?? **Séquence exacte:**
+'### ?? **SÃ©quence exacte:**
 '```
 '1. Collage du contenu ?
 '2. ? Pause 3 secondes (Application.Wait)
