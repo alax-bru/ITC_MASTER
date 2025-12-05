@@ -1,0 +1,191 @@
+Sub Rapports_Numer_Graph_Export()
+
+    Application.ScreenUpdating = False
+    
+    Dim wbSource As Workbook
+    Dim wbReport As Workbook
+    Dim wsWBS As Worksheet
+    Dim wsGraph As Worksheet
+    Dim wsRapNum As Worksheet
+    Dim wsRapGraph As Worksheet
+    
+    Dim rngSrcWBS As Range
+    Dim rngSrc As Range
+    Dim firstRow As Long, firstCol As Long
+    Dim rowCount As Long, colCount As Long
+    Dim i As Long, j As Long
+    Dim graphLastRow As Long
+    Dim savePath As String
+
+    Set wbSource = ThisWorkbook
+    Set wsWBS = wbSource.Sheets("01.3-ITC MASTER WBS")
+    Set wsGraph = wbSource.Sheets("1.4-Bilan Graphique")   ' adapter le nom si besoin
+    
+    '--- 1. Préparation de la vue WBS ---
+    wsWBS.Activate
+    On Error Resume Next
+    ActiveSheet.ShowAllData
+    On Error GoTo 0
+    
+    wsWBS.Columns("A:DZ").Hidden = True
+    wsWBS.Rows("1:1000").Hidden = True
+
+    wsWBS.Columns("A").Hidden = False
+    wsWBS.Columns("B").Hidden = False
+    wsWBS.Columns("D").Hidden = False
+    wsWBS.Columns("H").Hidden = False   ' F devient H
+    wsWBS.Columns("J").Hidden = False   ' H devient J
+    wsWBS.Columns("K").Hidden = False   ' I devient K
+    wsWBS.Columns("BW:CA").Hidden = False   ' BU:BY devient BW:CA
+    wsWBS.Columns("CC:CK").Hidden = False   ' CA:CI devient CC:CK
+
+    wsWBS.Rows("1").Hidden = False
+    wsWBS.Rows("7:8").Hidden = False
+    wsWBS.Rows("13").Hidden = False
+    wsWBS.Rows("55:57").Hidden = False
+    wsWBS.Rows("59").Hidden = False
+    wsWBS.Rows("60").Hidden = False
+    wsWBS.Rows("63").Hidden = False
+    wsWBS.Rows("65").Hidden = False
+    wsWBS.Rows("69:96").Hidden = False
+
+    wsWBS.Rows("97").Hidden = False
+    wsWBS.Rows("100").Hidden = False
+    wsWBS.Rows("103").Hidden = False
+    wsWBS.Rows("106").Hidden = False
+    wsWBS.Rows("109").Hidden = False
+    wsWBS.Rows("112").Hidden = False
+    wsWBS.Rows("690:707").Hidden = False
+
+    ActiveWindow.Zoom = 57
+
+    wsWBS.Rows("1").AutoFit
+    wsWBS.Rows("7:8").AutoFit
+    wsWBS.Rows("13").AutoFit
+    wsWBS.Rows("55:57").AutoFit
+    wsWBS.Rows("59").AutoFit
+    wsWBS.Rows("60").AutoFit
+    wsWBS.Rows("63").AutoFit
+    wsWBS.Rows("65").AutoFit
+    wsWBS.Rows("69:96").AutoFit
+
+    wsWBS.Rows("97").AutoFit
+    wsWBS.Rows("100").AutoFit
+    wsWBS.Rows("103").AutoFit
+    wsWBS.Rows("106").AutoFit
+    wsWBS.Rows("109").AutoFit
+    wsWBS.Rows("112").AutoFit
+
+    wsWBS.Range("A1").Select
+    Application.GoTo Reference:=wsWBS.Range("A1"), Scroll:=True
+    
+    ' ======================================================================
+    ' 2. CREATION DU NOUVEAU CLASSEUR "RAPPORT"
+    ' ======================================================================
+    Set wbReport = Workbooks.Add(xlWBATWorksheet)
+    Set wsRapNum = wbReport.Sheets(1)
+    On Error Resume Next
+    wsRapNum.Name = "Rapport Numérique"
+    On Error GoTo 0
+    
+    ' ---------- 2.1 Rapport Numérique ----------
+    Set rngSrcWBS = wsWBS.UsedRange
+    If Not rngSrcWBS Is Nothing Then
+        
+        firstRow = rngSrcWBS.row
+        firstCol = rngSrcWBS.Column
+        rowCount = rngSrcWBS.Rows.Count
+        colCount = rngSrcWBS.Columns.Count
+        
+        ' Copie complète (valeurs + formats + merges)
+        rngSrcWBS.Copy Destination:=wsRapNum.Range("A1")
+        Application.CutCopyMode = False
+        
+        ' Casser les formules (on garde formats / merges)
+        wsRapNum.UsedRange.Value = wsRapNum.UsedRange.Value
+        
+        ' Hauteurs de lignes + masquage identique
+        For i = 1 To rowCount
+            wsRapNum.Rows(i).RowHeight = wsWBS.Rows(firstRow + i - 1).RowHeight
+            wsRapNum.Rows(i).Hidden = wsWBS.Rows(firstRow + i - 1).Hidden
+        Next i
+        
+        ' Largeurs de colonnes + masquage identique
+        For j = 1 To colCount
+            wsRapNum.Columns(j).ColumnWidth = wsWBS.Columns(firstCol + j - 1).ColumnWidth
+            wsRapNum.Columns(j).Hidden = wsWBS.Columns(firstCol + j - 1).Hidden
+        Next j
+        
+    Else
+        MsgBox "Aucune cellule à copier dans '01.3-ITC MASTER WBS'.", vbExclamation, "Rapport numérique"
+    End If
+    
+    ' ---------- 2.2 Rapport graphique ----------
+    ' Créer / récupérer la feuille "Rapport graphique"
+    Set wsRapGraph = Nothing
+    On Error Resume Next
+    Set wsRapGraph = wbReport.Sheets("Rapport graphique")
+    On Error GoTo 0
+    
+    If wsRapGraph Is Nothing Then
+        Set wsRapGraph = wbReport.Sheets.Add(After:=wsRapNum)
+        On Error Resume Next
+        wsRapGraph.Name = "Rapport graphique"
+        On Error GoTo 0
+    End If
+    
+    ' Copier A1:Y100 tel quel, sans masquer de colonnes/lignes
+    graphLastRow = 100   ' à adapter si besoin
+    
+    wsGraph.Range("A1:Y" & graphLastRow).Copy Destination:=wsRapGraph.Range("A1")
+    Application.CutCopyMode = False
+    
+    ' Casser les formules
+    wsRapGraph.UsedRange.Value = wsRapGraph.UsedRange.Value
+    
+    ' Reproduire hauteurs de lignes et largeurs de colonnes
+    For i = 1 To graphLastRow
+        wsRapGraph.Rows(i).RowHeight = wsGraph.Rows(i).RowHeight
+    Next i
+    
+    For j = 1 To 25   ' A à Y = 25 colonnes
+        wsRapGraph.Columns(j).ColumnWidth = wsGraph.Columns(j).ColumnWidth
+    Next j
+    
+    wsRapNum.Activate
+    wsRapNum.Range("A1").Select
+
+    ' ======================================================================
+    ' 3. SAUVEGARDE DU CLASSEUR RAPPORT
+    ' ======================================================================
+    If wbSource.Path <> "" Then
+        savePath = wbSource.Path & Application.PathSeparator & _
+                   "Rapports_Graphiques_et_Numérique_ITC_MASTER.xlsx"
+    Else
+        ' Si le classeur source n'est pas encore sauvegardé
+        savePath = Application.DefaultFilePath & Application.PathSeparator & _
+                   "Rapports_Graphiques_et_Numérique_ITC_MASTER.xlsx"
+    End If
+    
+    wbReport.SaveAs fileName:=savePath, FileFormat:=xlOpenXMLWorkbook  ' .xlsx
+    
+    ' ======================================================================
+    ' 4. RÉINITIALISATION DE LA SHEET SOURCE
+    ' ======================================================================
+    wbSource.Sheets("01.3-ITC MASTER WBS").Activate
+    On Error Resume Next
+    ActiveSheet.ShowAllData
+    On Error GoTo 0
+    wbSource.Sheets("01.3-ITC MASTER WBS").Rows("1:5000").Hidden = False
+    wbSource.Sheets("01.3-ITC MASTER WBS").Columns("A:ZZ").Hidden = False
+    wbSource.Sheets("01.3-ITC MASTER WBS").Columns("F:G").Hidden = True
+    Application.DisplayFullScreen = False
+    Range("D9").Select
+    Application.GoTo Reference:=Range("D9"), Scroll:=True
+    
+    Application.ScreenUpdating = True
+
+End Sub
+
+
+
