@@ -1796,3 +1796,218 @@ Private Function GetVersionedPath(ByVal folderPath As String, ByVal baseName As 
     
     GetVersionedPath = candidate
 End Function
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+' ==========================================================================================
+' ==========================================================================================
+' ============================ REPORTING GRAPIQUE & NUMÉRIQUE ==============================
+' ==========================================================================================
+' ==========================================================================================
+
+Sub Rapports_Numer_Graph_Export()
+
+    Application.ScreenUpdating = False
+    Application.DisplayAlerts = False
+    Application.Calculation = xlCalculationManual
+    
+    Dim wbSource As Workbook, wbReport As Workbook
+    Dim wsWBS As Worksheet, wsGraph As Worksheet
+    Dim wsRapNum As Worksheet, wsRapGraph As Worksheet
+    Dim rngSrcWBS As Range
+    Dim rngDelCols As Range, rngDelRows As Range
+    Dim firstRow As Long, firstCol As Long
+    Dim rowCount As Long, colCount As Long
+    Dim i As Long, j As Long
+    Dim outFolder As String, outPath As String
+    
+    ' Tableaux pour stocker les dimensions des colonnes/lignes VISIBLES
+    Dim colWidths() As Double, rowHeights() As Double
+    Dim visColCount As Long, visRowCount As Long
+
+    Set wbSource = ThisWorkbook
+    Set wsWBS = wbSource.Sheets("01.3-ITC MASTER WBS")
+    Set wsGraph = wbSource.Sheets("1.4-Bilan Graphique")
+    
+    ' ======================================================================
+    ' 1. DÉFINIR LE MASQUE
+    ' ======================================================================
+    wsWBS.Activate
+    On Error Resume Next
+    ActiveSheet.ShowAllData
+    On Error GoTo 0
+    
+    wsWBS.Columns("A:DZ").Hidden = True
+    wsWBS.Rows("1:1000").Hidden = True
+
+    wsWBS.Columns("A").Hidden = False
+    wsWBS.Columns("B").Hidden = False
+    wsWBS.Columns("D").Hidden = False
+    wsWBS.Columns("H").Hidden = False
+    wsWBS.Columns("J").Hidden = False
+    wsWBS.Columns("K").Hidden = False
+    wsWBS.Columns("BW:CA").Hidden = False
+    wsWBS.Columns("CC:CK").Hidden = False
+
+    wsWBS.Rows("1").Hidden = False
+    wsWBS.Rows("7:8").Hidden = False
+    wsWBS.Rows("13").Hidden = False
+    wsWBS.Rows("55:57").Hidden = False
+    wsWBS.Rows("59").Hidden = False
+    wsWBS.Rows("60").Hidden = False
+    wsWBS.Rows("63").Hidden = False
+    wsWBS.Rows("65").Hidden = False
+    wsWBS.Rows("69:96").Hidden = False
+    wsWBS.Rows("97").Hidden = False
+    wsWBS.Rows("100").Hidden = False
+    wsWBS.Rows("103").Hidden = False
+    wsWBS.Rows("106").Hidden = False
+    wsWBS.Rows("109").Hidden = False
+    wsWBS.Rows("112").Hidden = False
+    wsWBS.Rows("690:707").Hidden = False
+    
+    ' ======================================================================
+    ' 2. CRÉATION DU RAPPORT
+    ' ======================================================================
+    Set wbReport = Workbooks.Add(xlWBATWorksheet)
+    Set wsRapNum = wbReport.Sheets(1)
+    wsRapNum.Name = "1-Rapport Numérique"
+    
+    ' ---------- 2.1 Rapport Numérique ----------
+    Set rngSrcWBS = wsWBS.UsedRange
+    firstRow = rngSrcWBS.Row
+    firstCol = rngSrcWBS.Column
+    rowCount = rngSrcWBS.Rows.Count
+    colCount = rngSrcWBS.Columns.Count
+    
+    ' Copie complète
+    rngSrcWBS.Copy Destination:=wsRapNum.Range("A1")
+    Application.CutCopyMode = False
+    wsRapNum.UsedRange.Value = wsRapNum.UsedRange.Value
+    
+    ' GROUPER colonnes cachées + STOCKER largeurs des visibles
+    Set rngDelCols = Nothing
+    visColCount = 0
+    ReDim colWidths(1 To colCount)
+    
+    For j = 1 To colCount
+        If wsWBS.Columns(firstCol + j - 1).Hidden Then
+            If rngDelCols Is Nothing Then
+                Set rngDelCols = wsRapNum.Columns(j)
+            Else
+                Set rngDelCols = Union(rngDelCols, wsRapNum.Columns(j))
+            End If
+        Else
+            visColCount = visColCount + 1
+            colWidths(visColCount) = wsWBS.Columns(firstCol + j - 1).ColumnWidth
+        End If
+    Next j
+    If Not rngDelCols Is Nothing Then rngDelCols.Delete
+    
+    ' GROUPER lignes cachées + STOCKER hauteurs des visibles
+    Set rngDelRows = Nothing
+    visRowCount = 0
+    ReDim rowHeights(1 To rowCount)
+    
+    For i = 1 To rowCount
+        If wsWBS.Rows(firstRow + i - 1).Hidden Then
+            If rngDelRows Is Nothing Then
+                Set rngDelRows = wsRapNum.Rows(i)
+            Else
+                Set rngDelRows = Union(rngDelRows, wsRapNum.Rows(i))
+            End If
+        Else
+            visRowCount = visRowCount + 1
+            rowHeights(visRowCount) = wsWBS.Rows(firstRow + i - 1).RowHeight
+        End If
+    Next i
+    If Not rngDelRows Is Nothing Then rngDelRows.Delete
+    
+    ' APPLIQUER les dimensions stockées
+    For j = 1 To visColCount
+        wsRapNum.Columns(j).ColumnWidth = colWidths(j)
+    Next j
+    
+    For i = 1 To visRowCount
+        wsRapNum.Rows(i).RowHeight = rowHeights(i)
+    Next i
+    
+    ' ---------- 2.2 Rapport Graphique ----------
+    Set wsRapGraph = wbReport.Sheets.Add(After:=wsRapNum)
+    wsRapGraph.Name = "2-Rapport Graphique"
+    
+    wsGraph.Range("A1:Z100").Copy Destination:=wsRapGraph.Range("A1")
+    Application.CutCopyMode = False
+    wsRapGraph.UsedRange.Value = wsRapGraph.UsedRange.Value
+    
+    For j = 1 To 26
+        wsRapGraph.Columns(j).ColumnWidth = wsGraph.Columns(j).ColumnWidth
+    Next j
+    For i = 1 To 100
+        wsRapGraph.Rows(i).RowHeight = wsGraph.Rows(i).RowHeight
+    Next i
+    
+    wsRapNum.Activate
+    wsRapNum.Range("A1").Select
+
+    ' ======================================================================
+    ' 3. SAUVEGARDE
+    ' ======================================================================
+    outFolder = GetOutputFolder_Local()
+    outPath = GetVersionedPath_Local(outFolder, "Rapports_ITC_MASTER", ".xlsx")
+    
+    wbReport.SaveAs Filename:=outPath, FileFormat:=xlOpenXMLWorkbook
+    wbReport.Close SaveChanges:=False
+    
+    ' ======================================================================
+    ' 4. RÉINITIALISATION
+    ' ======================================================================
+    wbSource.Activate
+    wsWBS.Rows("1:5000").Hidden = False
+    wsWBS.Columns("A:ZZ").Hidden = False
+    wsWBS.Columns("F:G").Hidden = True
+    Application.DisplayFullScreen = False
+    Range("D9").Select
+    
+    Application.ScreenUpdating = True
+    Application.DisplayAlerts = True
+    Application.Calculation = xlCalculationAutomatic
+    
+    MsgBox "✅ Rapport exporté :" & vbCrLf & outPath, vbInformation, "Export terminé"
+
+End Sub
+
+Private Function GetOutputFolder_Local() As String
+    Dim sep As String: sep = Application.PathSeparator
+    GetOutputFolder_Local = ThisWorkbook.Path & sep & "Livrables_Générés"
+    On Error Resume Next
+    If Dir(GetOutputFolder_Local, vbDirectory) = "" Then MkDir GetOutputFolder_Local
+    On Error GoTo 0
+End Function
+
+Private Function GetVersionedPath_Local(ByVal folder As String, ByVal base As String, ByVal ext As String) As String
+    Dim sep As String: sep = Application.PathSeparator
+    Dim candidate As String, v As Long
+    If Right$(folder, 1) <> sep Then folder = folder & sep
+    candidate = folder & base & ext
+    If Dir(candidate) = "" Then GetVersionedPath_Local = candidate: Exit Function
+    v = 2
+    Do: candidate = folder & base & "_v" & v & ext: v = v + 1: Loop While Dir(candidate) <> ""
+    GetVersionedPath_Local = candidate
+End Function
