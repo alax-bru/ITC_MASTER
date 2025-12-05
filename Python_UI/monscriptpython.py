@@ -404,29 +404,30 @@ schema = {
                     "id": "p2",
                     "label": "P2",
                     "subtitle": "Gros Œuvre",
-                    "cell": "L15",
+                    "cell": "M15",
                     "type": "date"
                 },
                 {
                     "id": "p3",
                     "label": "P3",
                     "subtitle": "Second Œuvre ou Process",
-                    "cell": "L16",
+                    "cell": "N15",
                     "type": "date"
                 },
                 {
                     "id": "p4",
                     "label": "P4",
                     "subtitle": "PCC et Hand-Over",
-                    "cell": "L17",
+                    "cell": "O15",
                     "type": "date"
                 },
                 {
                     "id": "p5",
                     "label": "P5",
                     "subtitle": "À customiser si besoin",
-                    "cell": "L18",
-                    "type": "date"
+                    "cell": "P15",
+                    "readonly": True,
+                    "source": "J15"
                 }
             ]
         }
