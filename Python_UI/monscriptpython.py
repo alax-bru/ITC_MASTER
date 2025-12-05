@@ -46,7 +46,7 @@ config = {
     "excel": {"visible_on_first_run": False, "auto_save": True, "max_retries": 3},
     # Macros
     "macro_deliverables": "Module1.Generer_Livrables",
-    "macro_reports": "Module7.Rapports_Numer_Graph_Export"
+    "macro_reports": "Module1.Rapports_Numer_Graph_Export"
 }
 (Path("config.json")).write_text(
     json.dumps(config, indent=2, ensure_ascii=False),
@@ -1810,7 +1810,7 @@ class MainWindow(QMainWindow):
             self.reports_tab.progress.setRange(0, 0)
             QApplication.processEvents()
 
-            macro = self.config.get('macro_reports', 'Module7.Rapports_Numer_Graph_Export')
+            macro = self.config.get('macro_reports', 'Module1.Rapports_Numer_Graph_Export')
             self.excel_client.run_macro(macro)
 
             self.reports_tab.progress.setVisible(False)
@@ -1983,7 +1983,7 @@ print("    - BASIC (7 champs)")
 print("    - FEED Quantités (26 champs J26-J51)")
 print("    - FEED Surfaces (tableaux SIP/SOP + récap WBS)")
 print("    - FEED Planning (5 colonnes de dates)")
-print("  • 1 onglet Rapports (macro Module7.Rapports_Numer_Graph_Export)")
+print("  • 1 onglet Rapports (macro Module1.Rapports_Numer_Graph_Export)")
 print("  • 1 onglet Livrables (Master Guide N7/N8/Q7-Q10 + macro Module1.Generer_Livrables)")
 
 print("\n🚀 DÉMARRAGE:")
